@@ -1,0 +1,43 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.mascharka.indoorlocalization.MainActivity" >
+    
+    <item
+        android:id="@+id/action_reset"
+        android:orderInCategory="1"
+        android:title="@string/action_reset"
+        app:showAsAction="never" />
+    
+    <item 
+        android:id="@+id/action_select_building"
+        android:orderInCategory="2"
+        android:title="@string/action_select_building"
+        app:showAsAction="never" />
+    
+    <item
+        android:id="@+id/action_select_room_size"
+        android:orderInCategory="3"
+        android:title="@string/action_select_room_size"
+        app:showAsAction="never" />
+    
+    <item
+        android:id="@+id/action_display_map"
+        android:orderInCategory="4"
+        android:title="@string/action_display_map"
+        android:checkable="true"
+        android:showAsAction="never" />
+    
+    <item
+        android:id="@+id/action_select_map"
+        android:orderInCategory="5"
+        android:title="@string/action_select_map"
+        android:showAsAction="never" />
+    
+    <item
+        android:id="@+id/action_start_tracker"
+        android:orderInCategory="6"
+        android:title="@string/action_start_tracker"
+        android:showAsAction="never" />
+
+</menu>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">IndoorLocalization</string>
+    <string name="text_xposition">X Position:</string>
+    <string name="text_yposition">Y Position:</string>
+    <string name="button_confirm">Confirm</string>
+
+    <string name="action_reset">Reset datafile</string>
+    <string name="action_select_building">Select building</string>
+    <string name="action_select_room_size">Select room size</string>
+    <string name="action_display_map">Display map</string>
+    <string name="action_select_map">Select map</string>
+    <string name="action_start_tracker">Switch to tracker</string>
+    
+    <string name="dialog_select_room_size">Select room size</string>
+    <string name="dialog_select_room_size_width">Width</string>
+    <string name="dialog_select_room_size_length">Length</string>
+    <string name="accept">Accept</string>
+    <string name="cancel">Cancel</string>
+    
+    <string name="dialog_select_building">Select building</string>
+    <string-array name="buildings" >
+        <item>Howard</item>
+        <item>Cowles</item>
+        <item>Cartwright</item>
+    </string-array>
+    
+    
+    
+    <string name="tracker_text_xcoord">X Position:</string>
+    <string name="tracker_text_ycoord">Y Position:</string>
+    <string name="tracker_text_goto">Go to (0,0)</string>
+    <string name="tracker_button">Next Point</string>
+    
+    <string name="action_select_algorithm">Select algorithm</string>
+    <string name="action_select_partitioning">Select partitioning</string>
+    <string name="action_start_data_collection">Switch to data collection</string>
+    
+    <string name="dialog_select_partitioning">Select partitioning</string>
+    <string-array name="partitions">
+        <item>1 partition</item>
+        <item>3 partitions</item>
+        <item>5 partitions</item>
+        <item>7 partitions</item>
+    </string-array>
+
+</resources>
