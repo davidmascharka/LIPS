@@ -7,4 +7,4 @@ Building the application and modifying it for usefulness in other buildings or a
 
 The models in /assets were built using WEKA (Waikato Environment for Knowledge Analysis http://www.cs.waikato.ac.nz/ml/weka/). WEKA is also used in the code for predicting the user position in the TrackerActivity class. The WEKA website is a great resource for any issues there, as well as the WEKA mailing list. Documentation for the Java resources in WEKA is available at http://weka.sourceforge.net/doc.dev/ while instructions for using WEKA in Java code can be found at http://weka.wikispaces.com/Use+WEKA+in+your+Java+code and http://weka.wikispaces.com/Programmatic+Use. Again, if there are problems, feel free to open an issue or send me an email.
 
-![ScreenShot](https://http://www.gnu.org/graphics/gplv3-127x51.png)
+![ScreenShot](http://www.gnu.org/graphics/gplv3-127x51.png)
