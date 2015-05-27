@@ -11,9 +11,13 @@ Building the application and modifying it for usefulness in other buildings or a
 
 # Adding additional machine learning classifiers
 Notice the RBFRegressor jar in libs. This is because RBFRegressor isn't by default installed with WEKA. To add RBFRegressor for use in code:
+
 Open WEKA
+
 Click the Tools tab, then Package Manager
+
 Find and install the RBFNetwork package
+
 The jar will be in wekafiles/packages/RBFNetwork/RBFNetwork.java
 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-127x51.png)
