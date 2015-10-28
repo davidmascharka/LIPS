@@ -9,6 +9,12 @@ The models in /assets were built using WEKA (Waikato Environment for Knowledge A
 # Building
 Building the application and modifying it for usefulness in other buildings or areas of interest should be straightforward. Depending on the intended use of the application, much less code than this may be necessary. For help setting up an Android development environment, the documentation at http://developer.android.com/ is excellent. Regarding the code itself, comments are fairly liberal and variable names tend to be descriptive. Again, if you have any trouble, please open an issue here on Github or send me an email.
 
+The main classes to change are MainActivity.java and TrackerActivity.java.
+
+The MainActivity file contains the code for data collection. The only necessary changes should be adding a new list of WiFi BSSIDs to listen for.
+
+TrackerActivity will need the model built on your new dataset to predict a position.
+
 # Adding additional machine learning classifiers
 Notice the RBFRegressor jar in libs. This is because RBFRegressor isn't by default installed with WEKA. To add RBFRegressor for use in code:
 
@@ -18,6 +24,6 @@ Click the Tools tab, then Package Manager
 
 Find and install the RBFNetwork package
 
-The jar will be in wekafiles/packages/RBFNetwork/RBFNetwork.java
+The jar will be in wekafiles/packages/RBFNetwork/RBFNetwork.jar
 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-127x51.png)
