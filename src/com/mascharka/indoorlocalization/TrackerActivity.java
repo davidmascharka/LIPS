@@ -71,46 +71,144 @@ import android.widget.Toast;
  * in getting user position is the sensor values, the attributes/instances,
  * and the updateScanResults method
  *
+ * It may be desirable to break this logic off to run in a service so that
+ * localization can be performed in the background so the user experiences
+ * no delay on re-opening the application or to notify the user when
+ * they reach an area of interest in, for example, navigation in a mall
+ *
  */
 public class TrackerActivity extends ActionBarActivity implements SensorEventListener,
 SelectPartitionDialogFragment.SelectPartitionDialogListener {
 	
-	// Class members for each sensor reading of interest
+	/**
+	 * The accelerometer reading in the X direction
+	 */
 	private float accelerometerX;
+
+	/**
+	 * The accelerometer reading in the Y direction
+	 */
 	private float accelerometerY;
+
+	/**
+	 * The accelerometer reading in the Z direction
+	 */
 	private float accelerometerZ;
+
+	/**
+	 * Reading from the X direction of the magnetic sensor
+	 */
 	private float magneticX;
+
+	/**
+	 * Reading from the Y direction of the magnetic sensor
+	 */
 	private float magneticY;
+
+	/**
+	 * Reading from the Z direction of the magnetic sensor
+	 */
 	private float magneticZ;
+
+	/**
+	 * Reading of the intensity from the light sensor
+	 */
 	private float light;
+
+	/**
+	 * Amount of rotation in the X direction
+	 */
 	private float rotationX;
+
+	/**
+	 * Amount of rotation in the Y direction
+	 */
 	private float rotationY;
+
+	/**
+	 * Amount of rotation in the Z direction
+	 */
 	private float rotationZ;
+
+	/**
+	 * Array holding rotation values - for querying
+	 */
 	private float[] rotation;
+
+	/**
+	 * Array holding inclination values - for querying
+	 */
 	private float[] inclination;
+
+	/**
+	 * Array holding orientation values - for querying
+	 */
 	private float[] orientation;
 
+	/**
+	 * Displays the user's x coordinate (predicted)
+	 */
 	private TextView xText;
+
+	/**
+	 * Displays the user's y coordinate (predicted)
+	 */
 	private TextView yText;
+
+	/**
+	 * Overlays a grid so the user can more easily see where they are
+	 */
 	private GridView grid;
 
+	/**
+	 * Lets us query the sensors in the device
+	 */
 	private SensorManager sensorManager;
+
+	/**
+	 * Holds what sensors are embedded in the device
+	 */
 	private List<Sensor> sensorList;
 
-	// Members for taking WiFi scans
+	/**
+	 * Lets us actively scan for WiFi signals
+	 */
 	private WifiManager wifiManager;
+
+	/**
+	 * Holds the results of an active scan for WiFi signals
+	 */
 	private List<ScanResult> scanResults;
+
+	/**
+	 * Holds each BSSID of interest and its signal strength
+	 */
 	private LinkedHashMap<String, Integer> wifiReadings;
 
-	// Members for accessing location data
+	/**
+	 * Lets us set up a listener for location changes
+	 */
 	private LocationManager locationManager;
+
+	/**
+	 * Listens for changes to reported location
+	 */
 	private LocationListener locationListener;
+
+	/**
+	 * The user's current location, as reported by GPS/Network
+	 */
 	private Location location;
 
+	/**
+	 * Worker thread for performing localization
+	 */
 	Thread t;
 
-	// Will listen for broadcasts from the WiFi manager. When a scan has finished, the
-	// onReceive method will be called which will recalculate the user's position
+	/**
+	 * Will listen for broadcasts from the WiFi manager. When a scan has finished, the
+	 *onReceive method will be called which will recalculate the user's position
+	 */
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -118,15 +216,31 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		}
 	};
 
+	/**
+	 * Which building is the user in?
+	 */
 	private String building;
 
-	// X and y coordinates to go to next for evaluation of the model
+	/**
+	 * X coordinate to display to the user to walk to (for evaluating)
+	 */
 	private float nextX = 0.0f;
+
+	/**
+	 * Y coordinate to display to the user to walk to (for evaluating)
+	 */
 	private float nextY = 0.0f;
 
-	// Predicted x and y position for the user
+	/**
+	 * Predicted X position of the user
+	 */
 	private float predictedX;
+
+	/**
+	 * Predicted Y position of the user
+	 */
 	private float predictedY;
+
 	private Timestamp time;
 	
 	File file;
@@ -138,35 +252,98 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 
 	private double predictedPartition;
 
-	// Algorithms to classify x position
+	/**
+	 * K* classifier for predicting x position
+	 */
 	KStar classifierXKStar;
+
+	/**
+	 * RBF regression classifier for predicting x position
+	 */
 	RBFRegressor classifierXRBFRegressor;
 
-	// Algorithms to classify y position
+	/**
+	 * K* classifier for predicting y position
+	 */
 	KStar classifierYKStar;
+
+	/**
+	 * RBF regression classifier for predicting y position
+	 */
 	RBFRegressor classifierYRBFRegressor;
 
+	/**
+	 * K* classifier for just the lower left portion of the building, predicting x
+	 */
 	KStar partitionLowerLeftX = null;
+
+	/**
+	 * K* classifier for just the lower right portion of the building, predicting x
+	 */
 	KStar partitionLowerRightX = null;
+
+	/**
+	 * K* classifier for just the upper left portion of the building, predicting x
+	 */
 	KStar partitionUpperLeftX = null;
+
+	/**
+	 * K* classifier for just the upper right portion of the building, predicting x
+	 */
 	KStar partitionUpperRightX = null;
+
+	/**
+	 * K* classifier for just the middle portion of the building, predicting x
+	 */
 	KStar partitionMiddleX = null;
 
+	/**
+	 * K* classifier for just the lower left portion of the building, predicting y
+	 */
 	KStar partitionLowerLeftY = null;
+
+	/**
+	 * K* classifier for just the lower right portion of the building, predicting y
+	 */
 	KStar partitionLowerRightY = null;
+
+	/**
+	 * K* classifier for just the upper left portion of the building, predicting y
+	 */
 	KStar partitionUpperLeftY = null;
+
+	/**
+	 * K* classifier for just the upper right portion of the building, predicting y
+	 */
 	KStar partitionUpperRightY = null;
+
+	/**
+	 * K* classifier for just the middle portion of the building, predicting y
+	 */
 	KStar partitionMiddleY = null;
 
-	// Algorithm to predict partition
+	/**
+	 * Random forest model to predict which portion of the building the user is in
+	 * Determines if the user is in upper left, lower left, upper right, lower right, middle
+	 */
 	RandomForest partitionClassifier;
 
-	// Instance to classify
+	/**
+	 * Instance for classifying X position
+	 */
 	Instances xInstances;
+
+	/**
+	 * Instance for classifying Y position
+	 */
 	Instances yInstances;
+
+	/**
+	 * Instance for classifying partition
+	 */
 	Instances partitionInstances;
 
-	// List of attributes
+	// List of attributes we use for prediction
 	// TODO: make this not be ugly
 	Attribute attrAccelX = new Attribute("accelerometerX");
 	Attribute attrAccelY = new Attribute("accelerometerY");
@@ -401,7 +578,11 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		//load5PartitionClassifiers.start();
 	}
 
-	// TODO: make pretty (ie hide this)
+	// TODO: make pretty (i.e. hide this in another class)
+	/**
+	 * Adds the attributes to the x classification, sets up the xInstance to
+	 * allow the classifier to predict x position from these attributes
+	 */
 	private void setUpXInstances() {
 		xClass.add(attrAccelX);
 		xClass.add(attrAccelY);
@@ -583,6 +764,10 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 	}
 
 	// TODO this one too
+	/**
+	 * Adds the attributes to the y classification, sets up the yInstance to
+	 * allow the classifier to predict y position from these attributes
+	 */
 	private void setUpYInstances() {
 		yClass.add(attrAccelX);
 		yClass.add(attrAccelY);
@@ -764,6 +949,10 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 	}
 
 	// TODO and this one
+	/**
+	 * Adds the attributes to the partition classification, set partition up to
+	 * allow the classifier to predict partition from these attributes
+	 */
 	private void setUpPartitionInstances() {
 		partitionClass.add(attrAccelX);
 		partitionClass.add(attrAccelY);
@@ -1019,11 +1208,16 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		super.onPause();
 	}
 
-	// Helper method to keep track of the most up-to-date location
+	/**
+	 * Helper method to keep track of the most up-to-date location
+	 */
 	private void updateLocation(Location location) {
 		this.location = location;
 	}
 
+	/**
+	 * When a new WiFi scan comes in, get sensor values and predict position
+	 */
 	private void updateScanResults() {
 		resetWifiReadings();
 
@@ -1185,13 +1379,16 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 					writer.flush();
 				}
 			});
-			t.setPriority(Thread.MIN_PRIORITY);
+			t.setPriority(Thread.MIN_PRIORITY); // run in the background
 			t.start();
 		}
 	}
 
 	/**
-	 * Take this out if you're not collecting data
+	 * Take this out if you're not evaluating the classifier
+	 * Displays to the user where the next point in the building is
+	 * that they should walk to, takes a time for when the user got to
+	 * this point
 	 */
 	private int pointCounter = 0;
 	public void nextPoint(View view) {
@@ -1314,9 +1511,11 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		switch (item.getItemId()) {
 		case R.id.action_select_algorithm:
 			// open x algorithm selection dialog
+			// todo
 			break;
 		case R.id.action_select_partitioning:
 			// open partition selection
+			// todo something with this
 			showSelectPartitionDialog();
 			break;
 		case R.id.action_start_data_collection:
@@ -1331,35 +1530,35 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		return true;
 	}
 
+	/*
+	 * Because Android doesn't let us query a sensor reading whenever we want
+	 * we have to keep track of the readings at all times. Here we just update
+	 * the class members with the values associated with each reading we're
+	 * interested in.
+	 */
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		/*
-		 * Because Android doesn't let us query a sensor reading whenever we want
-		 * we have to keep track of the readings at all times. Here we just update
-		 * the class members with the values associated with each reading we're
-		 * interested in.
-		 */
 		switch (event.sensor.getType()) {
-		case Sensor.TYPE_ACCELEROMETER:
-			accelerometerX = event.values[0];
-			accelerometerY = event.values[1];
-			accelerometerZ = event.values[2];
-			break;
-		case Sensor.TYPE_MAGNETIC_FIELD:
-			magneticX = event.values[0];
-			magneticY = event.values[1];
-			magneticZ = event.values[2];
-			break;
-		case Sensor.TYPE_LIGHT:
-			light = event.values[0];
-			break;
-		case Sensor.TYPE_ROTATION_VECTOR:
-			rotationX = event.values[0];
-			rotationY = event.values[1];
-			rotationZ = event.values[2];
-			break;
-		default:
-			break;
+			case Sensor.TYPE_ACCELEROMETER:
+				accelerometerX = event.values[0];
+				accelerometerY = event.values[1];
+				accelerometerZ = event.values[2];
+				break;
+			case Sensor.TYPE_MAGNETIC_FIELD:
+				magneticX = event.values[0];
+				magneticY = event.values[1];
+				magneticZ = event.values[2];
+				break;
+			case Sensor.TYPE_LIGHT:
+				light = event.values[0];
+				break;
+			case Sensor.TYPE_ROTATION_VECTOR:
+				rotationX = event.values[0];
+				rotationY = event.values[1];
+				rotationZ = event.values[2];
+				break;
+			default:
+				break;
 		}
 
 		SensorManager.getRotationMatrix(rotation, inclination, 
@@ -1371,6 +1570,9 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
+	/**
+	 * Loads the classifiers for predicting the X position
+	 */
 	private void loadXClassifierModels() {
 		try {
 			//classifierXKStar = (KStar) weka.core.SerializationHelper.read(
@@ -1399,6 +1601,9 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		}
 	}
 
+	/**
+	 * Loads the classifiers to predict Y position
+	 */
 	private void loadYClassifierModels() {
 		try {
 			//classifierYKStar = (KStar) weka.core.SerializationHelper.read(
@@ -1427,6 +1632,9 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		}
 	}
 
+	/**
+	 * Loads the classifier to predict the partition
+	 */
 	private void loadPartitionClassifierModels() {
 		try {
 			partitionClassifier = (RandomForest) weka.core.SerializationHelper.read(
@@ -1437,11 +1645,20 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		}
 	}
 
+	/**
+	 * Let the user pick what partitioning scheme they want to use
+	 */
 	private void showSelectPartitionDialog() {
 		DialogFragment dialog = new SelectPartitionDialogFragment();
 		dialog.show(getSupportFragmentManager(), "SelectPartitionDialogFragment");
 	}
 
+	/**
+	 * When the partitioning scheme changes, we should update the classifiers
+	 * to reflect this
+     *
+     * TODO fix this
+	 */
 	@Override
 	public void onPartitionChanged(String partitioning) {
 		//TextView buildingText = (TextView) findViewById(R.id.text_building);
@@ -1483,11 +1700,14 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		 */
 	}
 
+	/**
+	 * Empty out the wifi readings hashmap. Otherwise if you switch buildings in in the
+	 * middle of a session the access points for both buildings will be stored to the
+	 * data file and mess up the arff file
+	 *
+	 * TODO: add other buildings here as well
+	 */
 	private void resetWifiReadings() {
-
-		// Empty out the wifi readings hashmap. Otherwise if you switch buildings in in the
-		// middle of a session the access points for both buildings will be stored to the
-		// data file and mess up the arff file
 		wifiReadings.clear();
 
 		// The readings ending in :00, :01, :02, and :03 are in the 2.4 GHz band
@@ -1670,6 +1890,10 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		wifiReadings.put("20:3a:07:38:34:bf", 0);
 	}
 	
+	/**
+	 * Unnecessary if you're not testing/evaluating
+	 * Prints out the sensor values and time at each data point
+	 */
 	private void printValues() {
 		valuesWriter.print(accelerometerX + "," + accelerometerY + "," + accelerometerZ +
 				"," + magneticX + "," + magneticY + "," + magneticZ + "," + light +
@@ -1708,6 +1932,10 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 	}
 
 	// TODO clean all this up (hide it in another class or something)
+	/**
+	 * Add the value for each attribute of the data to the instance so that the
+	 * classifier can predict a position
+	 */
 	private void setInstanceValues() {
 		xInstances.get(0).setValue(attrAccelX, accelerometerX);
 		xInstances.get(0).setValue(attrAccelY, accelerometerY);

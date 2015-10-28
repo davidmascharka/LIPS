@@ -11,7 +11,7 @@ Building the application and modifying it for usefulness in other buildings or a
 
 The main classes to change are MainActivity.java and TrackerActivity.java.
 
-The MainActivity file contains the code for data collection. The only necessary changes should be adding a new list of WiFi BSSIDs to listen for.
+The MainActivity file contains the code for data collection. The only necessary changes should be adding a new list of WiFi BSSIDs to listen for. You may also want to change SelectBuildingDialogFragment to display the correct names for your building(s).
 
 TrackerActivity will need the model built on your new dataset to predict a position.
 
