@@ -6,9 +6,9 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.mascharka.indoorlocalization.MainActivity$PlaceholderFragment" >
+    tools:context="com.davidmascharka.lips.MainActivity" >
     
-    <com.mascharka.indoorlocalization.GridView
+    <com.davidmascharka.lips.GridView
         android:id="@+id/gridView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
