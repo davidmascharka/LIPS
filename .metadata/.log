@@ -1,0 +1,30 @@
+!SESSION 2016-04-17 17:15:58.398 -----------------------------------------------
+eclipse.buildId=4.5.1.M20150904-0015
+java.version=1.8.0_77
+java.vendor=Oracle Corporation
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Framework arguments:  -product org.eclipse.epp.package.java.product
+Command-line arguments:  -os linux -ws gtk -arch x86_64 -product org.eclipse.epp.package.java.product
+
+!ENTRY com.amazonaws.eclipse.core 1 0 2016-04-17 17:16:16.677
+!MESSAGE Starting the AWS toolkit core plugin...
+
+!ENTRY com.amazonaws.eclipse.core 1 0 2016-04-17 17:16:18.636
+!MESSAGE No profile found: default
+
+!ENTRY com.amazonaws.eclipse.core 1 0 2016-04-17 17:16:18.664
+!MESSAGE Monitoring content of /home/david/.aws/credentials
+
+!ENTRY com.amazonaws.eclipse.core 1 0 2016-04-17 17:16:18.752
+!MESSAGE AWS toolkit core plugin initialized after 2077 milliseconds.
+
+!ENTRY org.eclipse.ui 2 0 2016-04-17 17:16:18.756
+!MESSAGE The 'org.eclipse.ui.startup' extension from 'com.amazonaws.eclipse.elasticbeanstalk' does not provide a 'class' attribute.
+This usage is deprecated and a 'class' attribute should be provided.
+The release after Mars (4.5) will no longer support the deprecated usage!
+
+!ENTRY com.amazonaws.eclipse.core 1 0 2016-04-17 17:16:18.757
+!MESSAGE The current accountId is not found in the system. Switching to the default account.
+
+!ENTRY com.amazonaws.eclipse.core 1 0 2016-04-17 17:16:19.170
+!MESSAGE Initialized a new Cognito identity us-east-1:1eb9c416-5dba-4af2-b010-b3e8f9e7c7bf
