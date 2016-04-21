@@ -6,12 +6,15 @@ import java.io.PrintWriter;
 import java.sql.Timestamp;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.jar.Manifest;
 
+import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -22,10 +25,13 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -120,6 +126,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 	private int roomWidth;
 	private int roomLength;
 	private boolean displayMap;
+
+    private static final int MY_PERMISSIONS = 12;
 	
 	// Will listen for broadcasts from the WiFi manager. When a scan has finished, the
 	// onReceive method will be called which will store a datapoint if the user initiated
@@ -134,6 +142,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestMyPermissions();
+        }
 		
 		getPreferences();
 
@@ -175,6 +187,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 		
 		userInitiatedScan = false;
 	}
+
+    @TargetApi(23)
+    private void requestMyPermissions() {
+        if ((checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) ||
+                (checkSelfPermission(android.Manifest.permission.ACCESS_WIFI_STATE) !=
+                        PackageManager.PERMISSION_GRANTED) ||
+                (checkSelfPermission(android.Manifest.permission.CHANGE_WIFI_STATE) !=
+                        PackageManager.PERMISSION_GRANTED) ||
+                (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                        PackageManager.PERMISSION_GRANTED)) {
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_WIFI_STATE, android.Manifest.permission.CHANGE_WIFI_STATE,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS);
+        }
+    }
 	
 	@Override
 	public void onResume() {

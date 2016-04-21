@@ -15,10 +15,13 @@ import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
+
+import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -28,11 +31,14 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -79,8 +85,10 @@ import com.mascharka.indoorlocalization.R;
  * they reach an area of interest in, for example, navigation in a mall
  *
  */
-public class TrackerActivity extends ActionBarActivity implements SensorEventListener,
+public class TrackerActivity extends AppCompatActivity implements SensorEventListener,
 SelectPartitionDialogFragment.SelectPartitionDialogListener {
+
+    private static final int MY_PERMISSIONS = 13;
 	
 	/**
 	 * The accelerometer reading in the X direction
@@ -531,6 +539,10 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestMyPermissions();
+        }
+
 		setContentView(R.layout.activity_tracker);
 
 		if (savedInstanceState == null) {
@@ -580,6 +592,21 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		//load5PartitionClassifiers.start();
 	}
 
+    @TargetApi(23)
+    private void requestMyPermissions() {
+        if ((checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) ||
+                (checkSelfPermission(android.Manifest.permission.ACCESS_WIFI_STATE) !=
+                        PackageManager.PERMISSION_GRANTED) ||
+                (checkSelfPermission(android.Manifest.permission.CHANGE_WIFI_STATE) !=
+                        PackageManager.PERMISSION_GRANTED) ||
+                (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                        PackageManager.PERMISSION_GRANTED)) {
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_WIFI_STATE, android.Manifest.permission.CHANGE_WIFI_STATE,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS);
+        }
+    }
 	// TODO: make pretty (i.e. hide this in another class)
 	/**
 	 * Adds the attributes to the x classification, sets up the xInstance to
