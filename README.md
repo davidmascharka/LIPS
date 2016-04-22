@@ -1,6 +1,8 @@
 # LIPS
 LIPS (Learning-based Indoor Positioning System)
 
+Paper: (http://ieeexplore.ieee.org/xpl/articleDetails.jsp?reload=true&arnumber=7444919)
+
 LIPS is a hybrid fingerprinting-based approach to indoor localization using the sensors available in smartphones. For information about the research done involving this application, see http://arxiv.org/abs/1505.06125 (pdf at http://arxiv.org/pdf/1505.06125v1.pdf).
 
 # Machine Learning
