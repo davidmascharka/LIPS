@@ -1,14 +1,6 @@
 package com.davidmascharka.lips;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.sql.Timestamp;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.jar.Manifest;
-
-import android.annotation.TargetApi;
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -28,11 +20,10 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -45,6 +36,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mascharka.indoorlocalization.R;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.sql.Timestamp;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  *  Copyright 2015 David Mascharka
@@ -88,6 +86,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 	// Code used when the user launches an intent to select a map
 	private static final int GET_MAP_REQUEST = 0;
 
+	//@author Mahesh Gaya added this tag for debugging purposes
+	private String TAG = "Permission Test: ";
+
 	// Class members for each sensor reading of interest
 	private float accelerometerX;
 	private float accelerometerY;
@@ -120,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 	private LocationManager locationManager;
 	private LocationListener locationListener;
 	private Location location;
-	
+
 	// User options
 	private String building;
 	private int roomWidth;
@@ -128,6 +129,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 	private boolean displayMap;
 
     private static final int MY_PERMISSIONS = 12;
+
+	//@author Mahesh Gaya added these for permissions
+	private static final int REQUEST_LOCATION = 110;
+	private static final int REQUEST_WRITE_STORAGE = 112;
+	private static final int REQUEST_WIFI = 114;
 	
 	// Will listen for broadcasts from the WiFi manager. When a scan has finished, the
 	// onReceive method will be called which will store a datapoint if the user initiated
@@ -187,10 +193,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 		
 		userInitiatedScan = false;
 	}
+	/**
+	 * Callback received when a permissions request has been completed.
+	 * @author Mahesh Gaya
+	 */
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+										   @NonNull int[] grantResults) {
+		if (requestCode == REQUEST_LOCATION){
+			//received permissions for GPS
+			Log.i(TAG, "Received permissions for GPS");
 
-    @TargetApi(23)
+		} else if (requestCode == REQUEST_WRITE_STORAGE){
+			//received permissions for External storage
+			Log.i(TAG, "Received permissions for writing to External Storage");
+
+		} else if (requestCode == REQUEST_WIFI){
+			//received permissions for WIFI
+			Log.i(TAG, "Received permissions for WIFI");
+
+		} else {
+			super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		}
+
+	}
+
+   // @TargetApi(23)
     private void requestMyPermissions() {
-        if ((checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+        /* //this does not work
+		if ((checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED) ||
                 (checkSelfPermission(android.Manifest.permission.ACCESS_WIFI_STATE) !=
                         PackageManager.PERMISSION_GRANTED) ||
@@ -202,6 +233,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     android.Manifest.permission.ACCESS_WIFI_STATE, android.Manifest.permission.CHANGE_WIFI_STATE,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS);
         }
+        */
+		//@author Mahesh Gaya added new permission statement
+		if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+				Manifest.permission.ACCESS_FINE_LOCATION)
+				|| ActivityCompat.shouldShowRequestPermissionRationale(this,
+				Manifest.permission.ACCESS_WIFI_STATE)
+				|| ActivityCompat.shouldShowRequestPermissionRationale(this,
+				Manifest.permission.CHANGE_WIFI_STATE)
+				|| ActivityCompat.shouldShowRequestPermissionRationale(this,
+				Manifest.permission.WRITE_EXTERNAL_STORAGE)){
+			Toast.makeText(this, "GPS, WIFI, and Storage permissions are required for this app.", Toast.LENGTH_LONG).show();
+		} else {
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION );
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_WIFI_STATE,
+				Manifest.permission.CHANGE_WIFI_STATE}, REQUEST_WIFI);
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_STORAGE);
+		}
+
     }
 	
 	@Override
@@ -234,14 +283,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 		}
 		
 		// Request location updates from gps and the network
-		try { // TODO fix this by requesting permission
+		//@author Mahesh Gaya added permission if-statment
+		if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED) {
+			Log.i(TAG, "Permissions have NOT been granted. Requesting permissions.");
+			requestMyPermissions();
+		} else  {
+			Log.i(TAG, "Permissions have already been granted. Getting location from GPS and Network");
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
 					0, 0, locationListener);
 			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
 					0, 0, locationListener);
-		} catch (Exception e) {
-            e.printStackTrace();
-        }
+		}
+
 		
 		registerReceiver(receiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 	}
@@ -250,10 +310,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 	public void onPause() {
 		// Stop receiving updates
 		sensorManager.unregisterListener(this);
-        try { // TODO fix
+		//@author Mahesh Gaya added permission if-statment
+		if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED) {
+			Log.i(TAG, "Permissions have NOT been granted. Requesting permissions.");
+			requestMyPermissions();
+		} else  {
+			Log.i(TAG, "Permissions have already been granted. Removing Updates from Location Manager");
             locationManager.removeUpdates(locationListener);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 		unregisterReceiver(receiver);
 		
@@ -335,21 +405,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 					writer.print("," + location.getLatitude() + "," + location.getLongitude() + 
 						"," + location.getAccuracy());
 				} else {
-                    try { // TODO fix
+					//@author Mahesh Gaya added permission if-statment
+					if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+							!= PackageManager.PERMISSION_GRANTED
+							|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_WIFI_STATE)
+							!= PackageManager.PERMISSION_GRANTED
+							|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE)
+							!= PackageManager.PERMISSION_GRANTED
+							|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+							!= PackageManager.PERMISSION_GRANTED) {
+						Log.i(TAG, "Permissions have NOT been granted. Requesting permissions.");
+						requestMyPermissions();
+					} else  {
+						Log.i(TAG, "Permissions have already been granted. Getting last known location from GPS");
                         location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
+
 					if (location != null) {
 						writer.print("," + location.getLatitude() + "," +
 								location.getLongitude() + "," + location.getAccuracy());
 					} else {
-                        try { // TODO fix
+						//@author Mahesh Gaya added permission if-statment
+						if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+								!= PackageManager.PERMISSION_GRANTED
+								|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_WIFI_STATE)
+								!= PackageManager.PERMISSION_GRANTED
+								|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE)
+								!= PackageManager.PERMISSION_GRANTED
+								|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+								!= PackageManager.PERMISSION_GRANTED) {
+							Log.i(TAG, "Permissions have NOT been granted. Requesting permissions.");
+							requestMyPermissions();
+						} else  {
+							Log.i(TAG, "Permssions have already been granted. Getting last know location from network");
                             location = locationManager.getLastKnownLocation(
                                     LocationManager.NETWORK_PROVIDER);
-                        } catch (Exception e) {
-                            e.printStackTrace();
                         }
+
 						if (location != null) {
 							writer.print("," + location.getLatitude() + "," +
 									location.getLongitude() + "," + location.getAccuracy());
@@ -465,7 +557,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 		TextView buildingText = (TextView) findViewById(R.id.text_building);
 		buildingText.setText("Building: " + building);
 	}
-	
+
 	@Override
 	public void onRoomSizeChanged(int width, int length) {
 		roomWidth = width;
