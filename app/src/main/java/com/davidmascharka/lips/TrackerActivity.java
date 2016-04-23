@@ -1,22 +1,6 @@
 package com.davidmascharka.lips;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-
-import weka.classifiers.functions.RBFRegressor;
-import weka.classifiers.lazy.KStar;
-import weka.classifiers.trees.RandomForest;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instances;
-
-import android.annotation.TargetApi;
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -37,8 +21,9 @@ import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -48,6 +33,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mascharka.indoorlocalization.R;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import weka.classifiers.functions.RBFRegressor;
+import weka.classifiers.lazy.KStar;
+import weka.classifiers.trees.RandomForest;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instances;
 
 /**
  *  Copyright 2015 David Mascharka
@@ -85,10 +86,26 @@ import com.mascharka.indoorlocalization.R;
  * they reach an area of interest in, for example, navigation in a mall
  *
  */
-public class TrackerActivity extends AppCompatActivity implements SensorEventListener,
-SelectPartitionDialogFragment.SelectPartitionDialogListener {
 
-    private static final int MY_PERMISSIONS = 13;
+/*
+* Last Updated: April 23, 2016
+* author: Mahesh Gaya
+* Description:
+* --added M permission implementations
+* --added some TODOs for buildings
+* --enabled home button (arrow on top left of Tracker Activity
+ */
+public class TrackerActivity extends AppCompatActivity implements SensorEventListener,
+SelectPartitionDialogFragment.SelectPartitionDialogListener,
+		ActivityCompat.OnRequestPermissionsResultCallback{
+	//TODO: Need to actually test the app in Marshmallow
+	//@author Mahesh Gaya added this tag for debugging purposes
+	private String TAG = "Permission Test (TrackerActivity): ";
+    //private static final int MY_PERMISSIONS = 13;
+	//@author Mahesh Gaya added these for permissions
+	private static final int REQUEST_LOCATION = 110;
+	private static final int REQUEST_WRITE_STORAGE = 112;
+	private static final int REQUEST_WIFI = 114;
 	
 	/**
 	 * The accelerometer reading in the X direction
@@ -538,6 +555,15 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		//allow users to go back to Main Activity
+		//TODO: test if this works on Marshmallow
+		if (Build.VERSION.SDK_INT >= 23){
+			getActionBar().setDisplayHomeAsUpEnabled(true);
+			getActionBar().setDisplayShowHomeEnabled(true);
+		} else {
+			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+			getSupportActionBar().setDisplayShowHomeEnabled(true);
+		}
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestMyPermissions();
@@ -592,20 +618,24 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		//load5PartitionClassifiers.start();
 	}
 
-    @TargetApi(23)
+
     private void requestMyPermissions() {
-        if ((checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) !=
-                PackageManager.PERMISSION_GRANTED) ||
-                (checkSelfPermission(android.Manifest.permission.ACCESS_WIFI_STATE) !=
-                        PackageManager.PERMISSION_GRANTED) ||
-                (checkSelfPermission(android.Manifest.permission.CHANGE_WIFI_STATE) !=
-                        PackageManager.PERMISSION_GRANTED) ||
-                (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                        PackageManager.PERMISSION_GRANTED)) {
-            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
-                    android.Manifest.permission.ACCESS_WIFI_STATE, android.Manifest.permission.CHANGE_WIFI_STATE,
-                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS);
-        }
+		//@author Mahesh Gaya added new permission statement
+		if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+				Manifest.permission.ACCESS_FINE_LOCATION)
+				|| ActivityCompat.shouldShowRequestPermissionRationale(this,
+				Manifest.permission.ACCESS_WIFI_STATE)
+				|| ActivityCompat.shouldShowRequestPermissionRationale(this,
+				Manifest.permission.CHANGE_WIFI_STATE)
+				|| ActivityCompat.shouldShowRequestPermissionRationale(this,
+				Manifest.permission.WRITE_EXTERNAL_STORAGE)){
+			Toast.makeText(this, "GPS, WIFI, and Storage permissions are required for this app.", Toast.LENGTH_LONG).show();
+		} else {
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION );
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_WIFI_STATE,
+					Manifest.permission.CHANGE_WIFI_STATE}, REQUEST_WIFI);
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_STORAGE);
+		}
     }
 	// TODO: make pretty (i.e. hide this in another class)
 	/**
@@ -1207,15 +1237,25 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 			wifiManager.setWifiEnabled(true);
 		}
 
-        // TODO fix this to actually request permission
-        try {
+
             // Request location updates from gps and the network
+		//@author Mahesh Gaya added permission if-statment
+		if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED) {
+			Log.i(TAG, "Permissions have NOT been granted. Requesting permissions.");
+			requestMyPermissions();
+		} else  {
+			Log.i(TAG, "Permissions have already been granted. Getting location from GPS and Network");
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                     0, 0, locationListener);
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
                     0, 0, locationListener);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
 		registerReceiver(receiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
@@ -1232,11 +1272,20 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		// Stop receiving updates
 		sensorManager.unregisterListener(this);
 
-        // TODO fix this
-        try {
+		//@author Mahesh Gaya added permission if-statment
+		if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED) {
+			Log.i(TAG, "Permissions have NOT been granted. Requesting permissions.");
+			requestMyPermissions();
+		} else  {
+			Log.i(TAG, "Permissions have already been granted. Removing Updates.");
             locationManager.removeUpdates(locationListener);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 		unregisterReceiver(receiver);
 		
@@ -1273,14 +1322,26 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 				wifiReadings.put(result.BSSID, result.level);
 			} // else BSSID wasn't programmed in
 		}
-
-		if (location == null) {
-			location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+	//@author Mahesh Gaya added permission if-statment
+		if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE)
+				!= PackageManager.PERMISSION_GRANTED
+				|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED) {
+			Log.i(TAG, "Permissions have NOT been granted. Requesting permissions.");
+			requestMyPermissions();
+		} else {
+			Log.i(TAG, "Permissions have already been granted. Getting last known location from GPS and Network");
+			if (location == null) {
+				location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+			}
+			if (location == null) {
+				locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+			}
 		}
-		if (location == null) {
-			locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		}
-
 		setInstanceValues();
 		
 		printValues();
@@ -1549,23 +1610,29 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
 		switch (item.getItemId()) {
-		case R.id.action_select_algorithm:
-			// open x algorithm selection dialog
-			// todo
-			break;
-		case R.id.action_select_partitioning:
-			// open partition selection
-			// todo something with this
-			showSelectPartitionDialog();
-			break;
-		case R.id.action_start_data_collection:
-			// start main activity
-			Intent intent = new Intent(this, MainActivity.class);
-			startActivity(intent);
-			break;
-		default:
-			super.onOptionsItemSelected(item);
-			break;
+			case R.id.action_select_algorithm:
+				// open x algorithm selection dialog
+				// todo
+				break;
+			case R.id.action_select_partitioning:
+				// open partition selection
+				// todo something with this
+				showSelectPartitionDialog();
+				break;
+			case R.id.action_start_data_collection:
+				// start main activity
+				Intent intent = new Intent(this, MainActivity.class);
+				startActivity(intent);
+				break;
+			//allow user to go one level up(return to Main Activity)
+			case android.R.id.home:
+				NavUtils.navigateUpFromSameTask(this);
+				return true;
+
+
+			default:
+				super.onOptionsItemSelected(item);
+				break;
 		}
 		return true;
 	}
@@ -1746,6 +1813,9 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 	 * data file and mess up the arff file
 	 *
 	 * TODO: add other buildings here as well
+	 * TODO: Get approximate building name from GPS
+	 * TODO: Can we have an automated reading? Need to remove these hardcoded MAC addresses
+	 * NOTE: Wifi access points are going to be replaced with new ones
 	 */
 	private void resetWifiReadings() {
 		wifiReadings.clear();
@@ -1948,20 +2018,40 @@ SelectPartitionDialogFragment.SelectPartitionDialogListener {
 			valuesWriter.print("," + location.getLatitude() + "," + location.getLongitude() + 
 				"," + location.getAccuracy());
 		} else {
-            try {
+			//@author Mahesh Gaya added permission if-statment
+			if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+					!= PackageManager.PERMISSION_GRANTED
+					|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_WIFI_STATE)
+					!= PackageManager.PERMISSION_GRANTED
+					|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE)
+					!= PackageManager.PERMISSION_GRANTED
+					|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+					!= PackageManager.PERMISSION_GRANTED) {
+				Log.i(TAG, "Permissions have NOT been granted. Requesting permissions.");
+				requestMyPermissions();
+			} else  {
+				Log.i(TAG, "Permissions have already been granted. Getting location from GPS and Network");
                 location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            } catch (Exception e) {
-                e.printStackTrace(); // TODO fix
             }
 			if (location != null) {
 				valuesWriter.print("," + location.getLatitude() + "," +
 						location.getLongitude() + "," + location.getAccuracy());
 			} else {
-                try {
+				//@author Mahesh Gaya added permission if-statment
+				if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+						!= PackageManager.PERMISSION_GRANTED
+						|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_WIFI_STATE)
+						!= PackageManager.PERMISSION_GRANTED
+						|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE)
+						!= PackageManager.PERMISSION_GRANTED
+						|| ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+						!= PackageManager.PERMISSION_GRANTED) {
+					Log.i(TAG, "Permissions have NOT been granted. Requesting permissions.");
+					requestMyPermissions();
+				} else  {
+					Log.i(TAG, "Permissions have already been granted. Getting location from GPS and Network");
                     location = locationManager.getLastKnownLocation(
                             LocationManager.NETWORK_PROVIDER);
-                } catch (Exception e) {
-                    e.fillInStackTrace(); // TODO fix
                 }
 				if (location != null) {
 					valuesWriter.print("," + location.getLatitude() + "," +
