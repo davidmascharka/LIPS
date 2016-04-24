@@ -19,6 +19,8 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+
+        <!-- Main Activity -->
         <activity
             android:name="com.davidmascharka.lips.MainActivity"
             android:label="@string/app_name" >
@@ -29,10 +31,16 @@
             </intent-filter>
         </activity>
 
+        <!-- Tracker Activity -->
         <activity
             android:name="com.davidmascharka.lips.TrackerActivity"
             android:label="@string/app_name"
-            android:parentActivityName="com.davidmascharka.lips.MainActivity" />
+            android:parentActivityName="com.davidmascharka.lips.MainActivity">
+        <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value="com.davidmascharka.lips.MainActivity"
+            />
+        </activity>
 
     </application>
 

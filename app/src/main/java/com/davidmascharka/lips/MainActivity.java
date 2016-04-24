@@ -78,7 +78,8 @@ import java.util.List;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener,
 	SelectBuildingDialogFragment.SelectBuildingDialogListener,
-	SelectRoomSizeDialogFragment.SelectRoomSizeDialogListener {
+	SelectRoomSizeDialogFragment.SelectRoomSizeDialogListener,
+	ActivityCompat.OnRequestPermissionsResultCallback {
 	
 	// Preferences for storing user options such as room size and building
 	private static final String PREFS_NAME = "IndoorLocalizationPrefs";
